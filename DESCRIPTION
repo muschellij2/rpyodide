@@ -1,0 +1,25 @@
+Package: rpyodide
+Title: Call Python (Pyodide) from R in webR, Like 'reticulate'
+Version: 0.1.0
+Authors@R:
+    person("John", "Muschelli", , "jmusche1@jh.edu", role = c("aut", "cre"))
+Description: A 'reticulate'-style interface for calling Python from R when R
+    runs in the web browser through 'webR' (R compiled to WebAssembly). Python
+    runs in 'Pyodide' (CPython compiled to WebAssembly) in its own web worker,
+    and R talks to it synchronously through 'webR' worker messaging. Supports
+    running code, importing modules, calling functions, converting vectors,
+    lists, matrices and data frames to and from 'NumPy' and 'pandas',
+    installing packages with 'micropip', and several independent Python
+    sessions.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    jsonlite,
+    utils
+Suggests:
+    spelling,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1
+Language: en-US

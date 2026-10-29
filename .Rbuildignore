@@ -1,0 +1,7 @@
+^.*__pycache__.*$
+^.*\.Rproj$
+^\.github$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^README\.html$
