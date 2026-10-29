@@ -12,8 +12,9 @@
 #' Python version is the local one.
 #'
 #' @param name Session name.
-#' @param python Path to the Python executable. By default, the first of
-#'   `python3` and `python` found on the `PATH`.
+#' @param python Path to the Python executable. By default, the
+#'   `RPYODIDE_PYTHON` environment variable if it is set, otherwise the first
+#'   of `python3` and `python` found on the `PATH`.
 #' @param activate Make this the active session?
 #' @return The session, invisibly.
 #' @seealso [pyodide_start()] for Python in webR.
@@ -35,7 +36,8 @@ cpython_start <- function(name = "cpython", python = find_python(), activate = T
   server <- system.file("python", "rpyodide_stdio.py", package = "rpyodide", mustWork = TRUE)
   log <- tempfile("rpyodide-", fileext = ".log")
   proc <- processx::process$new(python, c("-u", "-B", server),
-                                stdin = "|", stdout = "|", stderr = log)
+                                stdin = "|", stdout = "|", stderr = log,
+                                encoding = "UTF-8")
   sess <- structure(list(name = name, token = paste0(name, ":", as.numeric(Sys.time())),
                          type = "cpython", pyodide_url = NA_character_, process = proc,
                          log = log),
@@ -53,6 +55,8 @@ cpython_start <- function(name = "cpython", python = find_python(), activate = T
 #'   default, or `""` if there is none.
 #' @export
 find_python <- function() {
+  env <- Sys.getenv("RPYODIDE_PYTHON")
+  if (nzchar(env)) return(if (python_ok(env)) env else "")
   for (exe in c("python3", "python")) {
     path <- Sys.which(exe)
     # Windows' "python3" may be a Microsoft Store stub; check that it runs.
@@ -79,7 +83,7 @@ cpython_request <- function(sess, payload) {
     }
   }
   check_alive()
-  rest <- proc$write_input(paste0(payload, "\n"))
+  rest <- proc$write_input(charToRaw(enc2utf8(paste0(payload, "\n"))))
   while (length(rest)) {
     proc$poll_io(1000)
     rest <- proc$write_input(rest)

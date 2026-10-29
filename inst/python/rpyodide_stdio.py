@@ -14,6 +14,9 @@ import rpyodide_bridge  # noqa: E402
 
 
 def main():
+    # The protocol is UTF-8 everywhere (Windows defaults to a legacy code page).
+    sys.stdin.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8")
     protocol = sys.stdout
     sys.stdout = sys.stderr  # stray output must not corrupt the protocol
     loop = asyncio.new_event_loop()

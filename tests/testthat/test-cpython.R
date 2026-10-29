@@ -79,7 +79,7 @@ test_that("POSIXct and difftime round-trip", {
   use_test_python()
   t <- as.POSIXct("2019-07-22 14:34:40.25", tz = "UTC")
   py$t <- t
-  expect_identical(py_eval("type(t).__name__"), "datetime")
+  expect_true(py_eval("type(t).__name__") %in% c("Timestamp", "datetime"))
   back <- py$t
   expect_s3_class(back, "POSIXct")
   expect_lt(abs(as.numeric(back) - as.numeric(t)), 1e-6)

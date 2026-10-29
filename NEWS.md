@@ -14,3 +14,6 @@
   `pyodide_stop()`, `pyodide_sessions()`.
 * Files whose paths are passed to Python are copied from webR's file system
   to Pyodide's; `py_upload()` copies other files.
+* `cpython_start()` runs the same Python bridge in a local CPython process,
+  so `rpyodide` (and code using it) can be tested outside webR, including on
+  CRAN.

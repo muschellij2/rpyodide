@@ -251,6 +251,9 @@ def _values(e):
     return v
 
 
+_EPOCH = datetime.datetime(1970, 1, 1)
+
+
 def _datetimes(e):
     """POSIXct seconds -> numpy datetime64[ns] (NA -> NaT)."""
     np = importlib.import_module("numpy")
@@ -290,10 +293,16 @@ def _from_r(e):
             df.index = e["rownames"]
         return df
     if t == "vec" and e.get("posixct"):
+        if importlib.util.find_spec("numpy") is None:  # e.g. a bare CPython
+            times = [None if math.isnan(x) else _EPOCH + datetime.timedelta(seconds=x)
+                     for x in _values(e)]
+            return times[0] if len(times) == 1 and not e.get("asis") else times
         times = _datetimes(e)
         if e.get("dim") is not None:
             return times.reshape(e["dim"], order="F")
         if e.get("names") is None and len(times) == 1 and not e.get("asis"):
+            if importlib.util.find_spec("pandas") is None:
+                return times[0].astype("datetime64[us]").item()
             return importlib.import_module("pandas").Timestamp(times[0])
         return times
     if t == "vec":

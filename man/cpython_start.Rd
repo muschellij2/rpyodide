@@ -12,8 +12,9 @@ find_python()
 \arguments{
 \item{name}{Session name.}
 
-\item{python}{Path to the Python executable. By default, the first of
-\code{python3} and \code{python} found on the \code{PATH}.}
+\item{python}{Path to the Python executable. By default, the
+\code{RPYODIDE_PYTHON} environment variable if it is set, otherwise the first
+of \code{python3} and \code{python} found on the \code{PATH}.}
 
 \item{activate}{Make this the active session?}
 }

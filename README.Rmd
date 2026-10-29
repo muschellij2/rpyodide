@@ -45,17 +45,22 @@ above, with a box for your own code. It is tested in headless Chrome.
 
 ## Installation
 
-`rpyodide` only works in webR. It is a pure R package, built for WebAssembly
-with [rwasm](https://r-wasm.github.io/rwasm/) (see `scripts/build-wasm.sh`
-in the project repository). In webR, install it from a repository that has
-that build:
+`rpyodide` is a pure R package. [R-universe](https://muschellij2.r-universe.dev)
+builds it for WebAssembly, so in webR install it with:
 
 ```{r install}
-webr::install("rpyodide", repos = c("https://<your-repo>/", "https://repo.r-wasm.org"))
+webr::install("rpyodide", repos = c("https://muschellij2.r-universe.dev", "https://repo.r-wasm.org"))
 ```
 
-Outside webR the package installs, but every function that talks to Python
-stops with an error. `is_webr()` tells you which situation you're in.
+It also installs in regular R, from GitHub or R-universe:
+
+```{r install-r}
+# install.packages("remotes")
+remotes::install_github("muschellij2/rpyodide")
+```
+
+Outside webR, Pyodide sessions can't start, but [CPython sessions](#testing-without-a-browser)
+can. `is_webr()` tells you which situation you're in.
 
 ### Requirements
 
@@ -167,6 +172,24 @@ pyodide_stop("plain")
 Objects belong to the session that made them, and using one in another
 session is an error.
 
+## Testing without a browser
+
+`cpython_start()` runs the same Python bridge in a local CPython process
+instead of Pyodide, so code written for `rpyodide` can be tested in regular R,
+in continuous integration and on CRAN:
+
+```{r cpython}
+cpython_start("test")          # needs processx and Python >= 3.8
+py_eval("[x ** 2 for x in range(3)]")
+pyodide_stop("test")
+```
+
+`rpyodide`'s own tests use this. They run wherever Python is installed and are
+skipped where it isn't. Tests that need NumPy or pandas are skipped if those
+aren't installed. In CPython sessions, packages come from the local Python
+(install them with pip), and files aren't copied because Python shares R's
+file system.
+
 ## Using reticulate and rpyodide from one package
 
 Most of `rpyodide`'s function names match reticulate's, so a package can
@@ -242,17 +265,20 @@ the results are identical to those on the desktop.
 
 ## CRAN
 
-`R CMD check` passes, and the package is pure R with only `jsonlite` and
-`utils` as dependencies. What makes CRAN awkward:
+`R CMD check --as-cran` passes. The package is pure R, and its only imports
+are `jsonlite` and `utils`. CRAN's machines have Python, so the tests run the
+R code and the Python bridge together against CPython (see
+[Testing without a browser](#testing-without-a-browser)). What CRAN can't
+test:
 
-* Its functions only work inside webR, so examples and tests can't run on
-  CRAN's machines. Examples that call Python are wrapped in `\dontrun{}`, and the tests that
-  call Python run in a browser instead (see `dev/` in the project
-  repository).
-* It relies on webR's worker proxy (synchronous `postMessage`). That is a webR
-  internal, not a documented API, and could change in a new webR release.
-* It downloads Pyodide from a CDN when a session starts.
+* The browser part: the JavaScript glue and Pyodide itself. Those are tested
+  in headless Chrome (`dev/` and `demo/` in the
+  [project repository](https://github.com/muschellij2/rpyodide)), and examples
+  that need webR are wrapped in `\dontrun{}`.
+* The browser part relies on webR's worker proxy (synchronous `postMessage`),
+  which is a webR internal, not a documented API, and could change in a new
+  webR release.
+* Pyodide is downloaded from a CDN when a session starts.
 
 webR users install packages from webR repositories (repo.r-wasm.org,
-R-universe), not from CRAN, so a GitHub repository with R-universe builds
-reaches the same users.
+R-universe), so R-universe is how they get `rpyodide` either way.
