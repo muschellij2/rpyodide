@@ -23,3 +23,5 @@ Suggests:
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.1
 Language: en-US
+URL: https://github.com/muschellij2/rpyodide
+BugReports: https://github.com/muschellij2/rpyodide/issues
