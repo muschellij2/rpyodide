@@ -4,7 +4,10 @@
 # rpyodide
 
 <!-- badges: start -->
-
+[![R-CMD-check](https://github.com/muschellij2/rpyodide/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/muschellij2/rpyodide/actions/workflows/R-CMD-check.yaml)
+[![test-coverage](https://github.com/muschellij2/rpyodide/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/muschellij2/rpyodide/actions/workflows/test-coverage.yaml)
+[![Codecov test coverage](https://codecov.io/gh/muschellij2/rpyodide/graph/badge.svg)](https://app.codecov.io/gh/muschellij2/rpyodide)
+[![CRAN status](https://www.r-pkg.org/badges/version/rpyodide)](https://CRAN.R-project.org/package=rpyodide)
 <!-- badges: end -->
 
 `rpyodide` lets you call Python from R **in the web browser**. R runs in
@@ -46,8 +49,8 @@ webr::install("rpyodide", repos = c("https://muschellij2.r-universe.dev", "https
 It also installs in regular R, from GitHub or R-universe:
 
 ``` r
-# install.packages("remotes")
-remotes::install_github("muschellij2/rpyodide")
+# install.packages("pak")
+pak::pak("muschellij2/rpyodide")
 ```
 
 Outside webR, Pyodide sessions can’t start, but [CPython
