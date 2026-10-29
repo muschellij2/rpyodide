@@ -120,6 +120,8 @@ queue_file_mirror <- function(path, session) {
       !startsWith(path, "/") || nchar(path) > 4096L) {
     return(invisible())
   }
+  # CPython sessions share R's file system
+  if (identical(.rpyodide$sessions[[session]]$type, "cpython")) return(invisible())
   info <- suppressWarnings(file.info(path, extra_cols = FALSE))
   if (is.na(info$isdir) || info$isdir) return(invisible())
   max_bytes <- getOption("rpyodide.mirror_max_bytes", 512 * 1024^2)

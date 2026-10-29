@@ -13,6 +13,6 @@ pyodide_stop(name = .rpyodide$active)
 \code{NULL}, invisibly.
 }
 \description{
-Terminates the session's worker. Python objects from that session can no
-longer be used.
+Terminates the session's worker (or, for \code{\link[=cpython_start]{cpython_start()}} sessions, its
+Python process). Python objects from that session can no longer be used.
 }

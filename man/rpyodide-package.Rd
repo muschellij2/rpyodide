@@ -8,12 +8,20 @@
 \description{
 A 'reticulate'-style interface for calling Python from R when R runs in the web browser through 'webR' (R compiled to WebAssembly). Python runs in 'Pyodide' (CPython compiled to WebAssembly) in its own web worker, and R talks to it synchronously through 'webR' worker messaging. Supports running code, importing modules, calling functions, converting vectors, lists, matrices and data frames to and from 'NumPy' and 'pandas', installing packages with 'micropip', and several independent Python sessions.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/muschellij2/rpyodide}
+  \item Report bugs at \url{https://github.com/muschellij2/rpyodide/issues}
+}
+
+}
 \author{
-\strong{Maintainer}: John Muschelli \email{jmusche1@jh.edu}
+\strong{Maintainer}: John Muschelli \email{muschellij2@gmail.com}
 
 Authors:
 \itemize{
-  \item John Muschelli \email{jmusche1@jh.edu}
+  \item John Muschelli \email{muschellij2@gmail.com}
 }
 
 }

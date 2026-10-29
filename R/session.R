@@ -114,7 +114,7 @@ pyodide_start <- function(name = "default", packages = character(),
     Sys.sleep(0.1)
   }
   sess <- structure(list(name = name, token = paste0(name, ":", as.numeric(Sys.time())),
-                         pyodide_url = pyodide_url),
+                         type = "pyodide", pyodide_url = pyodide_url),
                     class = "pyodide_session")
   .rpyodide$sessions[[name]] <- sess
   .rpyodide$mirrored[[name]] <- NULL
@@ -138,15 +138,20 @@ use_pyodide <- function(name, ...) {
 
 #' Stop a Pyodide session
 #'
-#' Terminates the session's worker. Python objects from that session can no
-#' longer be used.
+#' Terminates the session's worker (or, for [cpython_start()] sessions, its
+#' Python process). Python objects from that session can no longer be used.
 #'
 #' @param name Session name.
 #' @return `NULL`, invisibly.
 #' @export
 pyodide_stop <- function(name = .rpyodide$active) {
-  if (is.null(name) || is.null(.rpyodide$sessions[[name]])) return(invisible())
-  eval_js(sprintf("globalThis.__rpyodide.stop(%s)", js_string(name)))
+  sess <- if (!is.null(name)) .rpyodide$sessions[[name]]
+  if (is.null(sess)) return(invisible())
+  if (identical(sess$type, "cpython")) {
+    sess$process$kill()
+  } else {
+    eval_js(sprintf("globalThis.__rpyodide.stop(%s)", js_string(name)))
+  }
   .rpyodide$sessions[[name]] <- NULL
   .rpyodide$pending_del[[name]] <- NULL
   .rpyodide$mirrored[[name]] <- NULL
@@ -163,15 +168,17 @@ pyodide_stop <- function(name = .rpyodide$active) {
 pyodide_sessions <- function() {
   nms <- names(.rpyodide$sessions)
   if (is.null(nms)) nms <- character()
-  data.frame(name = nms, active = nms %in% .rpyodide$active,
-             pyodide_url = vapply(.rpyodide$sessions, `[[`, "", "pyodide_url",
-                                  USE.NAMES = FALSE),
-             stringsAsFactors = FALSE)
+  field <- function(f) {
+    vapply(.rpyodide$sessions, function(s) as.character(s[[f]]), "", USE.NAMES = FALSE)
+  }
+  data.frame(name = nms, active = nms %in% .rpyodide$active, type = field("type"),
+             pyodide_url = field("pyodide_url"), stringsAsFactors = FALSE)
 }
 
 #' @export
 print.pyodide_session <- function(x, ...) {
-  cat("<Pyodide session '", x$name, "'>\n", sep = "")
+  cat(if (identical(x$type, "cpython")) "<CPython session '" else "<Pyodide session '",
+      x$name, "'>\n", sep = "")
   invisible(x)
 }
 
@@ -206,8 +213,13 @@ py_request <- function(req, session = NULL) {
   }
   files <- take_file_mirrors(session)
   if (length(files)) req$files <- files
-  res <- eval_js(sprintf("globalThis.__rpyodide.request(%s, %s)", js_string(session),
-                         js_string(to_json(req))))
+  sess <- .rpyodide$sessions[[session]]
+  res <- if (identical(sess$type, "cpython")) {
+    cpython_request(sess, to_json(req))
+  } else {
+    eval_js(sprintf("globalThis.__rpyodide.request(%s, %s)", js_string(session),
+                    js_string(to_json(req))))
+  }
   res <- jsonlite::fromJSON(res, simplifyVector = FALSE)
   if (length(res$stdout) && nzchar(res$stdout)) cat(res$stdout)
   if (length(res$stderr) && nzchar(res$stderr)) cat(res$stderr, file = stderr())

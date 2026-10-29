@@ -59,9 +59,9 @@ test_that("values from Python are decoded", {
   expect_identical(dec('{"t":"vec","type":"logical","v":[]}'), logical())
 })
 
-test_that("Python functions error clearly outside webR", {
+test_that("Pyodide sessions error clearly outside webR", {
   skip_if(rpyodide::is_webr())
-  expect_error(py_eval("1 + 1"), "only works inside webR")
+  expect_error(pyodide_start(), "only works inside webR")
 })
 
 test_that("POSIXct and difftime round-trip through the encoding", {

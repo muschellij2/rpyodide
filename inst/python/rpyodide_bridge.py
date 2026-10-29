@@ -192,15 +192,15 @@ def _to_r(obj):
     if isinstance(obj, datetime.datetime):
         pd = sys.modules.get("pandas")
         if pd is not None and obj is pd.NaT:
-            return _double_vec([None]) | {"posixct": True}
+            return dict(_double_vec([None]), posixct=True)
         if obj.tzinfo is not None:
             obj = obj.astimezone(datetime.timezone.utc).replace(tzinfo=None)
         secs = (obj - datetime.datetime(1970, 1, 1)) / datetime.timedelta(seconds=1)
         if pd is not None and isinstance(obj, pd.Timestamp):
             secs = obj.value / 1e9
-        return _double_vec([secs]) | {"posixct": True}
+        return dict(_double_vec([secs]), posixct=True)
     if isinstance(obj, datetime.timedelta):
-        return _double_vec([obj.total_seconds()]) | {"difftime": True}
+        return dict(_double_vec([obj.total_seconds()]), difftime=True)
     if isinstance(obj, (list, tuple)):
         return {"t": "list", "v": [_to_r(x) for x in obj]}
     if isinstance(obj, dict):
@@ -426,6 +426,9 @@ async def _op_to_py(req):
 
 
 async def _op_install(req):
+    if pyodide_js is None:
+        raise RuntimeError("installing packages needs Pyodide's micropip; this session runs "
+                           "CPython, so install packages with pip instead")
     await _load_packages(["micropip"])
     import micropip
     await micropip.install(req["packages"], deps=req.get("deps", True))
@@ -444,14 +447,22 @@ async def _op_write_file(req):
 
 
 async def _op_list_packages(req):
-    await _load_packages(["micropip"])
-    import micropip
-    pkgs = micropip.list()
-    names = sorted(pkgs.keys())
+    if pyodide_js is None:  # CPython: installed distributions
+        import importlib.metadata
+        dists = {d.metadata["Name"]: d.version for d in importlib.metadata.distributions()
+                 if d.metadata["Name"]}
+        names = sorted(dists)
+        versions, sources = [dists[n] for n in names], ["cpython"] * len(names)
+    else:
+        await _load_packages(["micropip"])
+        import micropip
+        pkgs = micropip.list()
+        names = sorted(pkgs.keys())
+        versions = [str(pkgs[n].version) for n in names]
+        sources = [str(pkgs[n].source) for n in names]
     return {"t": "df", "names": ["package", "version", "source"],
-            "cols": [_vec("character", names),
-                     _vec("character", [str(pkgs[n].version) for n in names]),
-                     _vec("character", [str(pkgs[n].source) for n in names])]}
+            "cols": [_vec("character", names), _vec("character", versions),
+                     _vec("character", sources)]}
 
 
 async def _op_module_available(req):
@@ -503,7 +514,7 @@ async def handle(payload):
         resp = {"ok": False, "error": {
             "type": type(e).__name__,
             "message": str(e),
-            "traceback": "".join(traceback.format_exception(e)),
+            "traceback": "".join(traceback.format_exception(type(e), e, e.__traceback__)),
         }}
     resp["stdout"] = out.getvalue()
     resp["stderr"] = err.getvalue()
