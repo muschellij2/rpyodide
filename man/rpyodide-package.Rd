@@ -17,11 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: John Muschelli \email{muschellij2@gmail.com}
+\strong{Maintainer}: John Muschelli \email{muschellij2@gmail.com} (\href{https://orcid.org/0000-0001-6469-1750}{ORCID})
 
 Authors:
 \itemize{
-  \item John Muschelli \email{muschellij2@gmail.com}
+  \item John Muschelli \email{muschellij2@gmail.com} (\href{https://orcid.org/0000-0001-6469-1750}{ORCID})
 }
 
 }
